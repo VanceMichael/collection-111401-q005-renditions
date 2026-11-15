@@ -1,6 +1,8 @@
 # 响应式图录的展示资源领取
 
-通过浏览器读取当前首视角实际选中的资源地址，保存图录原文。图片候选与说明版本由来源页面发布。
+在按指定 viewport、deviceScaleFactor 与视角清单打开的页面中，由浏览器标准语义选出每个视角实际加载的资源地址，再以有限预算从来源原始领取并归档。图片候选与说明版本由来源页面发布；流程不做图像识别或画质增强。
+
+`receiveCurrent(base, directory, config?)` 是业务入口，config 可覆盖 viewport、deviceScaleFactor、views 与 budgetBytes。返回结果包含每个视角的收据、说明、候选清单与展示版，以及 missing 视角及原因（budget、not-published、edition、aborted、timeout、unavailable）、预算用量和 complete 标记；展示版在下载进行中切换时会中止未结束的下载、弃置已读字节并把 superseded 记为 true。manifest 与对象收据均原子落盘，可重新打开校验。
 
 ## 运行
 

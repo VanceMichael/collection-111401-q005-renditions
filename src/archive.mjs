@@ -50,6 +50,34 @@ export class Archive {
     return Promise.all(names.filter(name => name.endsWith('.json')).sort().map(async name =>
       JSON.parse(await readFile(join(this.root, 'receipts', name), 'utf8'))));
   }
+
+  /**
+   * 以与收据相同的临时文件加目录同步方式原子落盘一份领取清单，
+   * 清单只记录来源凭据与页面快照，不复制任何图像内容。
+   */
+  async saveManifest(manifest) {
+    const manifests = join(this.root, 'manifests');
+    await mkdir(manifests, { recursive: true });
+    const record = { ...manifest, id: manifest.id ?? randomUUID(), savedAt: new Date().toISOString() };
+    const manifestPath = join(manifests, record.id + '.json');
+    const staging = manifestPath + '.pending';
+    const handle = await open(staging, 'wx', 0o600);
+    try {
+      await handle.writeFile(JSON.stringify(record, null, 2));
+      await handle.sync();
+    } finally { await handle.close(); }
+    await rename(staging, manifestPath);
+    await syncDirectory(manifests);
+    return record;
+  }
+
+  async listManifests() {
+    let names;
+    try { names = await readdir(join(this.root, 'manifests')); }
+    catch (error) { if (error.code === 'ENOENT') return []; throw error; }
+    return Promise.all(names.filter(name => name.endsWith('.json')).sort().map(async name =>
+      JSON.parse(await readFile(join(this.root, 'manifests', name), 'utf8'))));
+  }
 }
 
 async function syncDirectory(path) {

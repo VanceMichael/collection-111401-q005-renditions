@@ -39,7 +39,11 @@ export async function createProvider(port = 0) {
         result = json({ generation: state.generation, mode: state.mode, clock: state.clock });
       } else result = await routes({ request, url, body, payload, state, json, text, binary });
       result ??= json({ error: '资料不存在' }, 404);
-      response.writeHead(result.status ?? 200, { 'cache-control': 'no-store', ...result.headers });
+      response.writeHead(result.status ?? 200, {
+        'cache-control': 'no-store',
+        'content-length': result.body.length,
+        ...result.headers
+      });
       response.end(result.body);
     } catch (error) {
       response.writeHead(400, { 'content-type': 'application/json' });
